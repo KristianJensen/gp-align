@@ -1,0 +1,110 @@
+import gp_align
+import skimage
+import skimage.feature
+import skimage.io
+import os
+import numpy as np
+import pandas as pd
+
+
+def analyse_run(image_list, plate_type=1):
+
+    rows, columns = gp_align.plate_specs["rows_and_columns"][str(plate_type)]
+
+    time_list, sorted_image_list = gp_align.parse_time.sort_filenames(image_list)
+    #sorted_image_list = image_list
+
+    plate_names = ["plate1", "plate2", "plate3", "plate4", "plate5", "plate6"]
+
+    skip_plates = set()
+
+    data = {}
+
+    calibration_name_left = "calibration_type_"+str(plate_type)+"_left"
+    calibration_name_right = "calibration_type_"+str(plate_type)+"_right"
+    calibration_left = skimage.io.imread(os.path.join(os.path.dirname(__file__), "data", calibration_name_left+".png"))
+    calibration_right = skimage.io.imread(os.path.join(os.path.dirname(__file__), "data", calibration_name_right+".png"))
+
+    calibration_left = calibration_left / calibration_left.max()  # Normalise to values between 0 and 1
+    calibration_right = calibration_right / calibration_right.max()  # Normalise to values between 0 and 1
+
+    calibration_left = skimage.feature.canny(calibration_left, 1)
+    calibration_right = skimage.feature.canny(calibration_right, 1)
+
+    for image_name in sorted_image_list:
+        print(image_name)
+        image = skimage.io.imread(image_name)
+        image = skimage.color.rgb2gray(image)
+
+        plate_images = gp_align.util.split_image_in_n(image)
+
+        for i, (plate_name, plate_image) in enumerate(zip(plate_names, plate_images)):
+            if i % 2 == 0:
+                calibration_plate = calibration_left
+                calibration_name = calibration_name_left
+            else:
+                calibration_plate = calibration_right
+                calibration_name = calibration_name_right
+
+            edge_image = skimage.feature.canny(plate_image, 1)
+            offset = gp_align.align.align_plates(edge_image, calibration_plate)  # Align the (edged) plate image with calibration to find the offset
+            well_names = gp_align.util.list_of_well_names(rows, columns, "bottom_left")
+
+            well_centers = generate_well_centers(
+                np.array(gp_align.plate_specs["plate_positions"][calibration_name]) + offset, # Add the offset to get the well centers in the analyte plate
+                gp_align.plate_specs["plate_size"],
+                rows, columns
+            )
+            if False and i == 4:
+                for well_name, center in zip(well_names, well_centers):
+                    print(center)
+                    if well_name == "H1":
+                        print(plate_image[
+                            center[0]-4: center[0]+4+1,
+                            center[1]-4: center[1]+4+1
+                         ])
+                        plate_image[
+                            center[0]-4: center[0]+4+1,
+                            center[1]-4: center[1]+4+1
+                         ] = 1
+                        skimage.io.imshow(plate_image)
+                        raise Exception()
+            assert len(well_centers) == 96
+            well_intensities = [find_well_intensity(plate_image, center) for center in well_centers]
+
+            for well_name, intensity in zip(well_names, well_intensities):
+                data.setdefault(plate_name, {}).setdefault(well_name, []).append(intensity)
+
+    # Format the data
+    output = {}
+    for plate, plate_data in data.items():
+        wells = gp_align.util.list_of_well_names(rows, columns, orientation="top_left")
+        plate_df = pd.DataFrame(plate_data)
+        assert len(plate_df.columns) == len(wells)
+        plate_df = plate_df[wells]
+
+        for col in plate_df:
+            assert len(plate_df[col]) == len(time_list)
+        plate_df.index = time_list
+        output[plate] = plate_df
+
+    return output
+
+
+def generate_well_centers(position, size, rows, columns):
+    """Returns a list of coordinates given an origin and plate size and dimensions"""
+    xs = (np.arange(0, size[0], size[0] / (columns*2)) + position[0])[1::2]
+    ys = (np.arange(0, size[1], size[1] / (rows*2)) + position[1])[1::2]
+    return np.array([(int(round(x)), int(round(y))) for y in ys for x in xs])
+
+
+def find_well_intensity(image, center, radius=4, n_mean=10):
+    """Given an image and a position, finds the mean of the *n_mean* darkest pixels within *radius*"""
+    im_slice = image[
+        center[0]-radius: center[0]+radius+1,
+        center[1]-radius: center[1]+radius+1
+    ].flatten()
+    im_slice.sort()
+    darkest = im_slice[:n_mean].mean()
+    return darkest
+
