@@ -1,7 +1,7 @@
 import numpy as np
 
 
-RADIUS = 5
+RADIUS = 10
 
 
 def align_plates(plate_image, calibration_plate):
@@ -17,7 +17,6 @@ def align_plates(plate_image, calibration_plate):
                 best_value = value
                 best_offset = (i, j)
     #TODO: Some check for best_value to validate that the images are properly aligned
-    #print(best_offset, best_value)
 
     return np.array(best_offset)
 

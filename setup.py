@@ -2,7 +2,7 @@
 
 from setuptools import setup
 
-setup(name='gp_align',
+setup(name='gp-align',
       version='0.1',
       description='Utilities for analysing growth profiler raw images',
       author='Kristian Jensen',

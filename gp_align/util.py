@@ -32,15 +32,15 @@ def list_of_well_names(n_rows, n_columns, orientation="top_left"):
 
 
 def split_image_in_n(image, n_height=3, n_width=2):
-    """Evenly cuts an image into bits. The returned order corresponds to a left-to-right reading pattern"""
+    """Evenly cuts an image into bits. The returned order is column-wise left-to-right"""
     height, width = image.shape
     output = []
-    for i in range(n_height):
-        for j in range(n_width):
+    for j in range(n_width):
+        for i in range(n_height):
             output.append(
                 np.array(image[
                     i*height//n_height:(i+1)*height//n_height,
                     j*width//n_width:(j+1)*width//n_width
-                ]) # Take "slices" outof the image
+                ]) # Take "slices" out of the image
             )
     return output

@@ -7,12 +7,14 @@ import numpy as np
 import pandas as pd
 
 
-def analyse_run(image_list, plate_type=1):
+def analyse_run(image_list, plate_type=1, parse_dates=True):
 
     rows, columns = gp_align.plate_specs["rows_and_columns"][str(plate_type)]
 
-    time_list, sorted_image_list = gp_align.parse_time.sort_filenames(image_list)
-    #sorted_image_list = image_list
+    if parse_dates:
+        time_list, sorted_image_list = gp_align.parse_time.sort_filenames(image_list)
+    else:
+        time_list, sorted_image_list = list(range(len(image_list))), image_list
 
     plate_names = ["plate1", "plate2", "plate3", "plate4", "plate5", "plate6"]
 
@@ -39,7 +41,7 @@ def analyse_run(image_list, plate_type=1):
         plate_images = gp_align.util.split_image_in_n(image)
 
         for i, (plate_name, plate_image) in enumerate(zip(plate_names, plate_images)):
-            if i % 2 == 0:
+            if i // 3 == 0:
                 calibration_plate = calibration_left
                 calibration_name = calibration_name_left
             else:
@@ -98,7 +100,7 @@ def generate_well_centers(position, size, rows, columns):
     return np.array([(int(round(x)), int(round(y))) for y in ys for x in xs])
 
 
-def find_well_intensity(image, center, radius=4, n_mean=10):
+def find_well_intensity(image, center, radius=4, n_mean=20):
     """Given an image and a position, finds the mean of the *n_mean* darkest pixels within *radius*"""
     im_slice = image[
         center[0]-radius: center[0]+radius+1,
