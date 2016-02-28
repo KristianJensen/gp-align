@@ -13,16 +13,16 @@ def list_of_well_names(n_rows, n_columns, orientation="top_left"):
         out = [row+str(col) for row in rows for col in columns]
 
     elif orientation == "top_right":
-        rows = reversed(rows)
+        rows = list(reversed(rows))
         out = [row+str(col) for col in columns for row in rows]
 
     elif orientation == "bottom_right":
-        rows = reversed(rows)
-        columns = reversed(columns)
+        rows = list(reversed(rows))
+        columns = list(reversed(columns))
         out = [row+str(col) for row in rows for col in columns]
 
     elif orientation == "bottom_left":
-        columns = reversed(columns)
+        columns = list(reversed(columns))
         out = [row+str(col) for col in columns for row in rows]
 
     else:
