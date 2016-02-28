@@ -22,6 +22,6 @@ def sort_filenames(image_list):
     }
     sorted_image_list = sorted(image_list, key=date_dict.get)
     time_list = [
-        round((date_dict[name] - date_dict[sorted_image_list[0]]).seconds / 60) for name in sorted_image_list
+        round((date_dict[name] - date_dict[sorted_image_list[0]]).total_seconds() / 60) for name in sorted_image_list
     ]
     return time_list, sorted_image_list
