@@ -8,6 +8,14 @@ import pandas as pd
 
 
 def analyse_run(image_list, plate_type=1, parse_dates=True):
+    """
+    Analyse a list of images from the Growth Profiler.
+
+    Parameters:
+    plate_type: The type of plates used
+    parse_dates: Whether to sort the images by time. The image_names must of format '%d%m%Y%H%M%S'
+    orientation: The orientation of the plates in the machine. The corner where A1 is located.
+    """
 
     rows, columns = gp_align.plate_specs["rows_and_columns"][str(plate_type)]
 
