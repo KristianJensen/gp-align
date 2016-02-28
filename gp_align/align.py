@@ -1,7 +1,7 @@
 import numpy as np
 
 
-RADIUS = 10
+RADIUS = 20
 
 
 def align_plates(plate_image, calibration_plate):
