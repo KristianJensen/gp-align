@@ -42,7 +42,7 @@ def analyse_run(image_list, plate_type=1, parse_dates=True, orientation="bottom_
     calibration_right = skimage.feature.canny(calibration_right, 1)
 
     for image_name in sorted_image_list:
-        print(image_name)
+        # print(image_name)
         image = skimage.io.imread(image_name)
         image = skimage.color.rgb2gray(image)
 
@@ -65,21 +65,15 @@ def analyse_run(image_list, plate_type=1, parse_dates=True, orientation="bottom_
                 gp_align.plate_specs["plate_size"],
                 rows, columns
             )
-            if False and i == 4:
-                for well_name, center in zip(well_names, well_centers):
-                    print(center)
-                    if well_name == "H1":
-                        print(plate_image[
-                            center[0]-4: center[0]+4+1,
-                            center[1]-4: center[1]+4+1
-                         ])
-                        plate_image[
-                            center[0]-4: center[0]+4+1,
-                            center[1]-4: center[1]+4+1
-                         ] = 1
-                        skimage.io.imshow(plate_image)
-                        raise Exception()
-            assert len(well_centers) == 96
+            #print(offset)
+            #for well_center in well_centers:
+            #    offset_center = well_center
+            #    plate_image[offset_center[0], offset_center[1]] = 1
+            #skimage.#io.imshow(plate_image)
+            #return 1
+            #print(well_centers)
+
+            assert len(well_centers) == rows * columns
             well_intensities = [find_well_intensity(plate_image, center) for center in well_centers]
 
             for well_name, intensity in zip(well_names, well_intensities):
@@ -105,10 +99,10 @@ def generate_well_centers(position, size, rows, columns):
     """Returns a list of coordinates given an origin and plate size and dimensions"""
     xs = (np.arange(0, size[0], size[0] / (columns*2)) + position[0])[1::2]
     ys = (np.arange(0, size[1], size[1] / (rows*2)) + position[1])[1::2]
-    return np.array([(int(round(x)), int(round(y))) for y in ys for x in xs])
+    return np.array([(int(round(x)), int(round(y))) for x in xs for y in ys])
 
 
-def find_well_intensity(image, center, radius=4, n_mean=20):
+def find_well_intensity(image, center, radius=4, n_mean=10):
     """Given an image and a position, finds the mean of the *n_mean* darkest pixels within *radius*"""
     im_slice = image[
         center[0]-radius: center[0]+radius+1,
