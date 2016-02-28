@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 
 
-def analyse_run(image_list, plate_type=1, parse_dates=True):
+def analyse_run(image_list, plate_type=1, parse_dates=True, orientation="bottom_left"):
     """
     Analyse a list of images from the Growth Profiler.
 
@@ -58,7 +58,7 @@ def analyse_run(image_list, plate_type=1, parse_dates=True):
 
             edge_image = skimage.feature.canny(plate_image, 1)
             offset = gp_align.align.align_plates(edge_image, calibration_plate)  # Align the (edged) plate image with calibration to find the offset
-            well_names = gp_align.util.list_of_well_names(rows, columns, "bottom_left")
+            well_names = gp_align.util.list_of_well_names(rows, columns, orientation)
 
             well_centers = generate_well_centers(
                 np.array(gp_align.plate_specs["plate_positions"][calibration_name]) + offset, # Add the offset to get the well centers in the analyte plate
